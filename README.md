@@ -27,3 +27,19 @@ ros2 run aruco_tracker follow_aruco
 ```bash
 ros2 run aruco_tracker debug_aruco
 ```
+
+---
+
+## ⚙️ PID Control Info
+- The **PID control** is inside the `listener_callback` function of the `follow_aruco` node.
+- It is currently a **simple implementation** using a **low-pass filter** for smoothing.
+
+---
+
+## 🤖 Running on Real Robot
+- Instead of running `follow_aruco`, use:
+```bash
+ros2 run aruco_tracker follow_aruco_irl
+```
+---
+✅ Ready to simulate or drive your robot in real life!
