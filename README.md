@@ -7,6 +7,9 @@
 ros2 launch robot launch_sim.launch.py
 ```
 
+## 📚 Note
+- Make sure your **OpenCV version is > 4.5** for proper ArUco marker detection.
+- 
 - **Launch ArUco Tracker (detect + follow nodes)**  
 ```bash
 ros2 launch aruco_tracker aruco_main.launch.py
@@ -42,4 +45,6 @@ ros2 run aruco_tracker debug_aruco
 ros2 run aruco_tracker follow_aruco_irl
 ```
 ---
+
+
 ✅ Ready to simulate or drive your robot in real life!
