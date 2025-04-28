@@ -56,6 +56,12 @@ class FollowAruco(Node):
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
+
+
+
+
+# Callback function for the timer
+
     def timer_callback(self):
         msg = Twist()
         if (time.time() - self.lastrcvtime < self.rcv_timeout_secs):
@@ -77,6 +83,21 @@ class FollowAruco(Node):
             msg.angular.z = self.search_angular_speed
             msg.linear.x = 0.0
         self.publisher_.publish(msg)
+
+
+# PID Controller for ArUco tracking
+
+
+# This is a simple implementation that uses a proportional controller
+# to adjust the robot's speed and angular velocity based on the
+# position of the ArUco marker.
+# The controller uses a low-pass filter to smooth the input values
+# and prevent sudden changes in speed and direction.
+# The filter value can be adjusted to change the responsiveness of
+# the controller. A value of 1.0 means no filtering, while a value
+# of 0.0 means maximum filtering.
+
+
 
     def listener_callback(self, msg):
         try:
