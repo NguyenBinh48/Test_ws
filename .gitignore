@@ -1,0 +1,14 @@
+# ROS 2 build
+/build/
+/install/
+/log/
+/src/.vscode
+/src/log
+/.vscode
+# Python
+__pycache__/
+*.pyc
+
+# Misc
+*.swp
+*.DS_Store
