@@ -46,14 +46,21 @@ ros2 run aruco_tracker follow_aruco_irl
 
 ## 🧪 Dependencies
 
-- Make sure your **OpenCV version is > 4.10**
-- To check your **Gazebo version**, run:
+- ✅ Make sure your **OpenCV version is > 4.10**  
+Check with:
+```bash
+python3 -c "import cv2; print(cv2.__version__)"
+```
+
+- ✅ Check your **Gazebo version**:
 ```bash
 gazebo --version
 ```
-Expected output example:
+Expected output:
 ```
 Gazebo multi-robot simulator, version 11.10.2
 ```
+
+---
 
 ✅ Ready to simulate or drive your robot in real life!
