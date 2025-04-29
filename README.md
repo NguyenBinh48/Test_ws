@@ -44,7 +44,16 @@ ros2 run aruco_tracker follow_aruco_irl
 
 ---
 
-## 📚 Note
-- Make sure your **OpenCV version is > 4.5** for proper ArUco marker detection.
+## 🧪 Dependencies
+
+- Make sure your **OpenCV version is > 4.10**
+- To check your **Gazebo version**, run:
+```bash
+gazebo --version
+```
+Expected output example:
+```
+Gazebo multi-robot simulator, version 11.10.2
+```
 
 ✅ Ready to simulate or drive your robot in real life!
