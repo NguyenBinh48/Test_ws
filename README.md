@@ -63,4 +63,25 @@ Gazebo multi-robot simulator, version 11.10.2
 
 ---
 
+## 📦 How to Upgrade OpenCV to > 4.10
+
+You can upgrade OpenCV using `pip`:
+
+```bash
+pip install --upgrade opencv-python
+```
+
+If you're using ROS2 and want to be sure it works system-wide:
+
+```bash
+pip install --upgrade opencv-python opencv-contrib-python
+```
+
+After that, verify again:
+```bash
+python3 -c "import cv2; print(cv2.__version__)"
+```
+
+---
+
 ✅ Ready to simulate or drive your robot in real life!
