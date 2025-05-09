@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
-import RPi.GPIO as GPIO   #pip install RPi.GPIO
+import pigpio  # pip install pigpio
 import time
 
 class FollowAruco2(Node):
@@ -33,25 +33,33 @@ class FollowAruco2(Node):
         self.stop_distance_thresh = self.get_parameter('stop_distance_thresh').get_parameter_value().double_value
         self.filter_value = self.get_parameter('filter_value').get_parameter_value().double_value
 
-        # GPIO setup
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
+        # pigpio setup
+        try:
+            self.pi = pigpio.pi()  # Connect to pigpiod daemon
+            if not self.pi.connected:
+                self.get_logger().error("Failed to connect to pigpiod daemon")
+                raise RuntimeError("pigpiod connection failed")
+        except Exception as e:
+            self.get_logger().error(f"pigpio initialization failed: {e}")
+            raise
+
         self.ENA = 18
         self.IN1 = 17
         self.IN2 = 27
         self.ENB = 12
         self.IN3 = 22
         self.IN4 = 23
-        GPIO.setup(self.ENA, GPIO.OUT)
-        GPIO.setup(self.IN1, GPIO.OUT)
-        GPIO.setup(self.IN2, GPIO.OUT)
-        GPIO.setup(self.ENB, GPIO.OUT)
-        GPIO.setup(self.IN3, GPIO.OUT)
-        GPIO.setup(self.IN4, GPIO.OUT)
-        self.pwm_a = GPIO.PWM(self.ENA, 100)
-        self.pwm_b = GPIO.PWM(self.ENB, 100)
-        self.pwm_a.start(0)
-        self.pwm_b.start(0)
+
+        # Set GPIO modes to output
+        for pin in [self.ENA, self.IN1, self.IN2, self.ENB, self.IN3, self.IN4]:
+            self.pi.set_mode(pin, pigpio.OUTPUT)
+            self.pi.write(pin, 0)  # Initialize to low
+
+        # Initialize PWM (100 Hz, same as original)
+        self.pi.set_PWM_frequency(self.ENA, 100)
+        self.pi.set_PWM_frequency(self.ENB, 100)
+        self.pi.set_PWM_dutycycle(self.ENA, 0)  # 0-255 (0% duty cycle)
+        self.pi.set_PWM_dutycycle(self.ENB, 0)
 
         # Initialize state
         self.target_x = 0.0  # Lateral offset (cm)
@@ -64,44 +72,44 @@ class FollowAruco2(Node):
 
     def move_straight(self, speed_percent):
         """Move robot straight (0-100 speed)."""
-        GPIO.output(self.IN1, GPIO.HIGH)
-        GPIO.output(self.IN2, GPIO.LOW)
-        GPIO.output(self.IN3, GPIO.HIGH)
-        GPIO.output(self.IN4, GPIO.LOW)
-        self.pwm_a.ChangeDutyCycle(speed_percent)
-        self.pwm_b.ChangeDutyCycle(speed_percent)
+        duty_cycle = int((speed_percent / 100.0) * 255)  # Convert 0-100% to 0-255
+        self.pi.write(self.IN1, 1)
+        self.pi.write(self.IN2, 0)
+        self.pi.write(self.IN3, 1)
+        self.pi.write(self.IN4, 0)
+        self.pi.set_PWM_dutycycle(self.ENA, duty_cycle)
+        self.pi.set_PWM_dutycycle(self.ENB, duty_cycle)
 
     def rotate(self, angular_z):
         """Rotate robot based on angular_z (rad/s). Positive: CCW, Negative: CW."""
         # Map angular_z (rad/s) to PWM difference (0-100%)
-        # Assume max angular speed of 1 rad/s maps to 100% speed difference
         speed_diff = min(abs(angular_z) * 100, 100)  # Scale to 0-100%
         base_speed = 50  # Base speed for rotation
         if angular_z > 0:  # CCW: Left slower, Right faster
             left_speed = max(0, base_speed - speed_diff)
             right_speed = min(100, base_speed + speed_diff)
-            GPIO.output(self.IN1, GPIO.HIGH)
-            GPIO.output(self.IN2, GPIO.LOW)
-            GPIO.output(self.IN3, GPIO.HIGH)
-            GPIO.output(self.IN4, GPIO.LOW)
+            self.pi.write(self.IN1, 1)
+            self.pi.write(self.IN2, 0)
+            self.pi.write(self.IN3, 1)
+            self.pi.write(self.IN4, 0)
         else:  # CW: Left faster, Right slower
             left_speed = min(100, base_speed + speed_diff)
             right_speed = max(0, base_speed - speed_diff)
-            GPIO.output(self.IN1, GPIO.HIGH)
-            GPIO.output(self.IN2, GPIO.LOW)
-            GPIO.output(self.IN3, GPIO.HIGH)
-            GPIO.output(self.IN4, GPIO.LOW)
-        self.pwm_a.ChangeDutyCycle(left_speed)
-        self.pwm_b.ChangeDutyCycle(right_speed)
+            self.pi.write(self.IN1, 1)
+            self.pi.write(self.IN2, 0)
+            self.pi.write(self.IN3, 1)
+            self.pi.write(self.IN4, 0)
+        self.pi.set_PWM_dutycycle(self.ENA, int((left_speed / 100.0) * 255))
+        self.pi.set_PWM_dutycycle(self.ENB, int((right_speed / 100.0) * 255))
 
     def stop(self):
         """Stop both motors."""
-        self.pwm_a.ChangeDutyCycle(0)
-        self.pwm_b.ChangeDutyCycle(0)
-        GPIO.output(self.IN1, GPIO.LOW)
-        GPIO.output(self.IN2, GPIO.LOW)
-        GPIO.output(self.IN3, GPIO.LOW)
-        GPIO.output(self.IN4, GPIO.LOW)
+        self.pi.set_PWM_dutycycle(self.ENA, 0)
+        self.pi.set_PWM_dutycycle(self.ENB, 0)
+        self.pi.write(self.IN1, 0)
+        self.pi.write(self.IN2, 0)
+        self.pi.write(self.IN3, 0)
+        self.pi.write(self.IN4, 0)
 
     def timer_callback(self):
         if (time.time() - self.lastrcvtime < self.rcv_timeout_secs):
@@ -114,7 +122,7 @@ class FollowAruco2(Node):
                 # Normal tracking behavior
                 linear_x = self.forward_chase_speed if self.target_z > self.min_distance_thresh else 0.0
                 angular_z = -self.angular_chase_multiplier * self.target_x
-                if linear_x > 0:
+                if linear_x > ष:
                     self.move_straight(linear_x * 100)  # Scale 0-1 to 0-100%
                 else:
                     self.stop()
@@ -136,9 +144,10 @@ class FollowAruco2(Node):
 
     def destroy_node(self):
         self.stop()
-        self.pwm_a.stop()
-        self.pwm_b.stop()
-        GPIO.cleanup()
+        for pin in [self.ENA, self.IN1, self.IN2, self.ENB, self.IN3, self.IN4]:
+            self.pi.write(pin, 0)
+            self.pi.set_mode(pin, pigpio.INPUT)  # Reset to input for safety
+        self.pi.stop()  # Disconnect from pigpiod
         super().destroy_node()
 
 def main(args=None):

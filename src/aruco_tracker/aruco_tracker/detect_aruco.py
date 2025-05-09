@@ -18,8 +18,8 @@ class DetectAruco(Node):
         self.image_sub = self.create_subscription(
             Image,
             # '/image_in',
-            '/camera/image_raw',
-            #'/image_raw',
+            #'/camera/image_raw',
+            '/image_raw',
             self.callback,
             rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value
         )
