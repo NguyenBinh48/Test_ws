@@ -14,7 +14,10 @@ class ArucoDebugViewer(Node):
         # Subscribe to raw camera image
         self.subscription = self.create_subscription(
             Image,
-            '/camera/image_raw',
+            #'/camera/image_raw',
+            #'/image_raw',
+            '/image_out',
+
             self.image_callback,
             rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value
         )

@@ -28,8 +28,8 @@ setup(
         'console_scripts': [
             'detect_aruco = aruco_tracker.detect_aruco:main',
             'follow_aruco = aruco_tracker.follow_aruco:main',
+            'follow_aruco_irl = aruco_tracker.follow_aruco_irl:main',
             'debug_aruco = aruco_tracker.debug_aruco:main',
-            'debug = aruco_tracker.debug:main',
         ],
     },
 

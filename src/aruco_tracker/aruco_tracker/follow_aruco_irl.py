@@ -4,9 +4,9 @@ from std_msgs.msg import Float32MultiArray
 import RPi.GPIO as GPIO   #pip install RPi.GPIO
 import time
 
-class FollowAruco(Node):
+class FollowAruco2(Node):
     def __init__(self):
-        super().__init__('follow_aruco')
+        super().__init__('follow_aruco_irl')
         self.get_logger().info('Following ArUco marker...')
         self.subscription = self.create_subscription(
             Float32MultiArray,
@@ -143,13 +143,13 @@ class FollowAruco(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    follow_aruco = FollowAruco()
+    follow_aruco_irl = FollowAruco2()
     try:
-        rclpy.spin(follow_aruco)
+        rclpy.spin(follow_aruco_irl)
     except KeyboardInterrupt:
         pass
     finally:
-        follow_aruco.destroy_node()
+        follow_aruco_irl.destroy_node()
         rclpy.shutdown()
 
 if __name__ == '__main__':
